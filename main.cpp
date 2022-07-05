@@ -6,7 +6,7 @@
 class Board
 {
 public:
-	void Play()
+	void Play()		//This function handles the game loop
 	{
 		std::cout << "Start!" << '\n' << '\n';
 		PrintBoard();
@@ -17,7 +17,7 @@ public:
 			PrintBoard();
 		}
 
-		if (CheckBoard() == 1) //check whether a player has won, else show "Draw"
+		if (CheckBoard() == 1) //Check whether a player has won, else show "Draw"
 		{
 			if (turnCount % 2 == 0)
 			{
@@ -39,7 +39,7 @@ public:
 	{
 		std::cout << "Current Board:" << '\n';
 		
-		for (int i = 0; i < maxSize; i++) //loop through the board and draw it to the console
+		for (int i = 0; i < maxSize; i++)	//Loop through the board and draw it to the console
 		{
 			if (brd.at(i) == 0)
 			{
@@ -54,12 +54,12 @@ public:
 				std::cout << " O ";
 			}
 
-			if (((maxSize % (i + 1)) == rowSize || (maxSize % (i + 1) == 0)) &&
+			if (((maxSize % (i + 1)) == rowSize || (maxSize % (i + 1) == 0)) &&		//Draw a horizontal divider between rows after drawing the 3rd and 6th cells
 				((i != 0) && ((i + 1) != maxSize)))
 			{
 				std::cout << '\n' << "-----------" << '\n';
 			}
-			else if (i != maxSize - 1)
+			else if (i != maxSize - 1)		//Draw a divider for each cell except when moving to a lower row or at the last cell
 			{
 				std::cout << '|';
 			}
@@ -69,14 +69,35 @@ public:
 	}
 
 
-void MakeMove()
+	bool IsValidMove(int pos)
 	{
-		std::string pos = ""; //string used instead of char to allow for easier manipulation
-		int intPos = 9;
-
-		while (intPos > 8) //if the int value of the character given by the user is greater than 8, get more input
+		if (pos >= 0 && pos < 9)	//Sanity check
 		{
-			if (turnCount % 2 == 0) //print Player X or O depending on the turn counter
+			if (brd.at(pos) != 0)	//If the position is already taken, return false
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+
+	void MakeMove()
+	{
+		std::string pos = "";
+		int intPos = 9;
+		bool validMove = false;
+
+		while (!validMove) //If the int value of the first character given by the user is greater than 8/less than 0, get more input
+		{
+			if (turnCount % 2 == 0) //Print Player X or O depending on the turn counter
 			{
 				std::cout << "Player X: Enter the position of your move: ";
 			}
@@ -87,29 +108,26 @@ void MakeMove()
 
 			std::cin >> pos;
 
-			//if the first char entered is not between 0 and 8 (inclusive), set pos to "9"
-			//so that the loop will continue until a valid number is entered
-			if ((int) pos[0] < 48 || (int) pos[0] > 56)
+			//If the first char entered is not between 0 and 8 (inclusive), set pos to "9"...
+			//...so that the loop will continue until a valid number is entered
+			if (pos[0] < '0' || pos[0] > '8')
 			{
 				pos = "9";
 			}
 
-			intPos = std::stoi(pos); //convert the char in pos to an int
+			intPos = std::stoi(pos); //Convert the char in pos to an int
 
 			if (intPos < 9)
 			{
-				if (brd.at(intPos) != 0) //if the position has already been filled, continue looping
-				{
-					intPos = 9;
-				}
+				validMove = IsValidMove(intPos);
 			}
 
-			std::cin.ignore(INT_MAX, '\n'); //ignore any other characters the user entered
+			std::cin.ignore(INT_MAX, '\n'); //Ignore any other characters the user entered
 		}
 
 		std::cout << '\n';
 
-		if (turnCount % 2 == 0) //place an X or O according to the turn counter
+		if (turnCount % 2 == 0) //Place an X or O according to the turn counter
 		{
 			brd.at(intPos) = 1;
 		}
@@ -136,17 +154,18 @@ void MakeMove()
 			fullbrd = true;
 		}
 
-		//Check rows and columns
+		//Check rows, columns, and diagonals by copying the board cells of interest
 		std::vector<int> rows = std::vector<int>(rowSize, 0);
 		std::vector<int> cols = std::vector<int>(rowSize, 0);
 		std::vector<int> diag1 = std::vector<int>(rowSize, 0);
 		std::vector<int> diag2 = std::vector<int>(rowSize, 0);
-
+		
 		for (int i = 0; i < rowSize; i++)
 		{
 			rowsequal = true;
 			colsequal = true;
 
+			//Loop through each row and column and check if they all have Xs or Os
 			for (int j = 0; j < rowSize; j++)
 			{
 				rows.at(j) = brd.at((i * rowSize) + j);
@@ -162,6 +181,7 @@ void MakeMove()
 				}
 			}
 
+			//Use equal() to check if all cells in a row/col are the same (checks cells 2 and 1, then 3 and 2)
 			if (!(std::equal(rows.begin() + 1, rows.end(), rows.begin())))
 			{
 				rowsequal = false;
@@ -176,6 +196,7 @@ void MakeMove()
 				return 1;
 			}
 
+			//Get the two diagonals [(0, 4, 8) and (2, 4, 6)] and check if they have all Xs or Os
 			diag1.at(i) = brd.at((i * rowSize) + i);
 			diag2.at(i) = brd.at((i * rowSize) + (rowSize - (1 + i)));
 
@@ -217,7 +238,7 @@ private:
 	int maxSize = 9;
 	int rowSize = 3;
 	int turnCount = 0;
-	int brdState = 0;
+	int brdState = 0;	//For potential future use in choosing when to draw the board
 	std::vector<int> brd = std::vector<int>(maxSize, 0); //0 = open, 1 = X, 2 = O
 };
 
